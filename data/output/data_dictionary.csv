@@ -1,0 +1,46 @@
+Column_Name,Data_Type,Non_Null_Count,Null_Count,Null_Percentage,mean,std,min,max
+FIPS,object,2275,0,0.0,,,,
+State,object,2275,0,0.0,,,,
+County,object,2275,0,0.0,,,,
+% Adults with Obesity,float64,2265,10,0.44,38.502,3.646,26.6,49.1
+% Adults with Diabetes,float64,2265,10,0.44,10.942,1.903,6.5,16.9
+Average Number of Physically Unhealthy Days,float64,2265,10,0.44,4.481,0.607,2.786,6.274
+Food Environment Index,float64,2237,38,1.67,7.488,0.971,4.6,9.9
+80th Percentile Income,float64,2264,11,0.48,119420.011,18217.704,65585.0,180717.0
+20th Percentile Income,float64,2264,11,0.48,27446.769,6409.83,12165.0,48839.0
+Income Ratio,float64,2264,11,0.48,4.465,0.636,2.757,6.304
+% Children in Poverty,float64,2265,10,0.44,18.757,6.579,3.8,38.4
+% Uninsured,float64,2265,10,0.44,10.158,3.97,3.382,22.434
+% Some College,float64,2265,10,0.44,58.258,10.262,28.007,90.856
+% Completed High School,float64,2265,10,0.44,89.331,4.284,75.348,100.0
+Primary Care Physicians Ratio,object,2159,116,5.1,,,,
+# Primary Care Physicians,float64,2159,116,5.1,18.358,22.233,0.0,111.0
+Population,float64,2265,10,0.44,8821.936,11778.843,57.0,250189.0
+% Not Proficient in English,float64,2265,10,0.44,0.834,0.876,0.0,4.203
+% Rural,float64,2265,10,0.44,71.947,28.03,0.0,100.0
+% Excessive Drinking,float64,2265,10,0.44,20.029,2.949,11.571,28.058
+% Insufficient Sleep,float64,2265,10,0.44,37.324,3.815,26.4,48.6
+Food_Access_Barrier_Index,float64,2236,39,1.71,0.313,0.069,0.129,0.509
+Socioeconomic_Vulnerability_Index,float64,2265,10,0.44,0.138,0.043,0.042,0.27
+Health_Risk_Score,float64,2265,10,0.44,0.275,0.028,0.186,0.359
+Area_Type,category,2265,10,0.44,,,,
+High_Income_Inequality,int64,2275,0,0.0,0.469,0.499,0.0,1.0
+% Adults with Obesity_normalized,float64,2265,10,0.44,0.0,1.0,-3.265,2.907
+% Adults with Diabetes_normalized,float64,2265,10,0.44,0.0,1.0,-2.334,3.131
+Average Number of Physically Unhealthy Days_normalized,float64,2265,10,0.44,-0.0,1.0,-2.791,2.953
+Food Environment Index_normalized,float64,2237,38,1.67,0.0,1.0,-2.976,2.485
+80th Percentile Income_normalized,float64,2264,11,0.48,-0.0,1.0,-2.956,3.365
+20th Percentile Income_normalized,float64,2264,11,0.48,-0.0,1.0,-2.385,3.338
+Income Ratio_normalized,float64,2264,11,0.48,0.0,1.0,-2.686,2.892
+% Children in Poverty_normalized,float64,2265,10,0.44,-0.0,1.0,-2.274,2.986
+% Uninsured_normalized,float64,2265,10,0.44,0.0,1.0,-1.707,3.093
+% Some College_normalized,float64,2265,10,0.44,-0.0,1.0,-2.949,3.177
+% Completed High School_normalized,float64,2265,10,0.44,-0.0,1.0,-3.265,2.491
+# Primary Care Physicians_normalized,float64,2159,116,5.1,-0.0,1.0,-0.826,4.168
+% Not Proficient in English_normalized,float64,2265,10,0.44,-0.0,1.0,-0.952,3.846
+% Rural_normalized,float64,2265,10,0.44,0.0,1.0,-2.567,1.001
+% Excessive Drinking_normalized,float64,2265,10,0.44,-0.0,1.0,-2.869,2.724
+% Insufficient Sleep_normalized,float64,2265,10,0.44,-0.0,1.0,-2.864,2.956
+Food_Access_Barrier_Index_normalized,float64,2236,39,1.71,0.0,1.0,-2.662,2.828
+Socioeconomic_Vulnerability_Index_normalized,float64,2265,10,0.44,-0.0,1.0,-2.221,3.096
+Health_Risk_Score_normalized,float64,2265,10,0.44,0.0,1.0,-3.217,3.044
