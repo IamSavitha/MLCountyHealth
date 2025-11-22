@@ -26,3 +26,7 @@ Thumbs.db
 dist/
 build/
 *.egg-info/
+
+# Project documentation (local only)
+PROJECT_FAQ.md
+PROJECT_FLOWCHARTS.md
