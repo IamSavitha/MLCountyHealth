@@ -42,7 +42,7 @@
     \maketitle
 
     \begin{abstract}
-    This study investigates the complex interplay between socioeconomic factors, food environment, and metabolic health outcomes at the county level across the United States. Using County Health Rankings 2025 data encompassing 2,275 counties across 48 states, we applied a comprehensive suite of machine learning algorithms including regression (Linear, Ridge, Lasso), classification (Logistic Regression, KNN, Naive Bayes, SVM, Decision Tree, Random Forest, Extra Trees), clustering (K-Means, Hierarchical), and dimensionality reduction (PCA) techniques. Our analysis reveals that sleep deprivation (r=0.51) and poverty (r=0.42) are stronger predictors of obesity than food environment factors (r=-0.28), challenging traditional assumptions about food deserts. We evaluated class imbalance mitigation using SMOTE and found the original dataset to be adequately balanced (1.13:1 ratio). The Random Forest classifier achieved the highest F1 score (0.837) for income inequality prediction, while Ridge regression explained 42\% of variance in obesity rates. These findings contribute to UN Sustainable Development Goal 3 (Good Health and Well-being) and SDG 10 (Reduced Inequalities), providing data-driven insights for public health policy interventions targeting metabolic disease prevention in vulnerable communities.
+    This study investigates the complex interplay between socioeconomic factors, food environment, and metabolic health outcomes at the county level across the United States. Using County Health Rankings 2025 data encompassing 2,314 counties across 48 states, we applied a comprehensive suite of machine learning algorithms including regression (Linear, Ridge, Lasso), binary classification (Logistic Regression, KNN, Naive Bayes, SVM, Decision Tree, Random Forest, Extra Trees), multi-class classification (3-class health prediction using Random Forest and SVM), clustering (K-Means, Hierarchical), and dimensionality reduction (PCA) techniques. Our analysis reveals that sleep deprivation (r=0.51) and poverty (r=0.42) are stronger predictors of obesity than food environment factors (r=-0.28), challenging traditional assumptions about food deserts. We evaluated class imbalance mitigation using SMOTE and found the original dataset to be adequately balanced (1.13:1 ratio). For binary classification, Random Forest achieved the highest F1 score (0.837) for income inequality prediction. For 3-class health prediction, Random Forest achieved 78.6\% accuracy while SVM achieved 77-78\% accuracy in classifying counties into Good/Fair/Poor health categories using 49 socioeconomic and health features. Ridge regression explained 42\% of variance in obesity rates. These findings contribute to UN Sustainable Development Goal 3 (Good Health and Well-being) and SDG 10 (Reduced Inequalities), providing data-driven insights for public health policy interventions targeting metabolic disease prevention in vulnerable communities.
     \end{abstract}
 
     \begin{IEEEkeywords}
@@ -76,11 +76,12 @@
     Our key contributions include:
 
     \begin{enumerate}
-        \item \textbf{Comprehensive multi-algorithm analysis:} Application of 10+ machine learning algorithms across regression, classification, and clustering tasks to the same dataset, enabling robust comparison of modeling approaches.
+        \item \textbf{Comprehensive multi-algorithm analysis:} Application of 10+ machine learning algorithms across regression, binary classification, multi-class classification (3-class health prediction), and clustering tasks to the same dataset, enabling robust comparison of modeling approaches.
+        \item \textbf{Multi-class health stratification:} Novel 3-class health prediction framework using Random Forest and SVM on 49 comprehensive features across 2,314 counties, achieving 78.6\% accuracy for nuanced risk stratification beyond binary classification.
         \item \textbf{Class imbalance investigation:} Systematic evaluation of SMOTE effectiveness on balanced data, demonstrating when synthetic oversampling adds value versus introducing noise.
         \item \textbf{Feature engineering:} Development of composite indices (Food Access Barrier Index, Socioeconomic Vulnerability Index, Health Risk Score) that capture complex multidimensional constructs.
         \item \textbf{Hierarchical model interpretation:} Multi-level analysis from individual features through engineered indices to cluster-based county profiles.
-        \item \textbf{Interactive dashboard:} Streamlit-based visualization platform for stakeholder engagement and exploratory analysis.
+        \item \textbf{Interactive dashboard:} Streamlit-based visualization platform with 9 pages including 3-class health prediction module for stakeholder engagement and exploratory analysis.
     \end{enumerate}
 
     The remainder of this paper is organized as follows: Section II reviews related work; Section III describes our dataset and preprocessing methodology; Section IV details our machine learning approaches; Section V presents experimental results; Section VI discusses findings and implications; and Section VII concludes with lessons learned and future directions.
@@ -218,6 +219,38 @@
     \textbf{Evaluation metrics:} Accuracy, precision, recall, F1 score, AUC-ROC, 5-fold CV accuracy, confusion matrices.
 
     \textbf{SMOTE comparison:} Trained duplicate models on SMOTE-resampled training data (1:1 class ratio) while evaluating on original test set to assess synthetic oversampling impact.
+
+    \subsubsection{Multi-Class Classification: 3-Class Health Prediction}
+
+    \textbf{Objective:} Classify counties into three health outcome categories (Good Health, Fair Health, Poor Health) based on comprehensive socioeconomic and health features.
+
+    \textbf{Target variable creation:} Counties were divided into three balanced groups using quantile-based discretization (pd.qcut) on the '\% Fair or Poor Health' metric:
+    \begin{itemize}
+        \item Good Health: Lower tertile ($<$33.3\% percentile)
+        \item Fair Health: Middle tertile (33.3\%--66.7\% percentile)
+        \item Poor Health: Upper tertile ($>$66.7\% percentile)
+    \end{itemize}
+
+    \textbf{Data preprocessing:} To match the original SVM/RF notebook analysis exactly:
+    \begin{enumerate}
+        \item Loaded raw Excel data (2025CountyHealthRankingsDatav3.xlsx, Select Measure Data sheet)
+        \item Removed columns with $>$700 missing values
+        \item Dropped identifier columns (FIPS, State, County)
+        \item Removed all 95\% CI and National Z-Score columns
+        \item Dropped 'Presence of Water Violation' column
+        \item Applied complete case analysis (dropna), yielding 2,314 counties
+        \item Used all 49 numeric features (not feature-selected subset)
+    \end{enumerate}
+
+    \textbf{Algorithms:}
+    \begin{itemize}
+        \item \textbf{Random Forest:} 200 estimators, max depth = 20, balanced class weights
+        \item \textbf{SVM (RBF kernel):} C = 10, gamma = 'scale', probability estimates enabled
+    \end{itemize}
+
+    \textbf{Rationale:} This analysis extends our binary classification by evaluating gradient of health outcomes rather than dichotomous categories, providing more nuanced risk stratification for targeted interventions.
+
+    \textbf{Evaluation metrics:} Accuracy, precision, recall, F1 score (macro-averaged), confusion matrix, classification report per class.
 
     \subsubsection{Clustering Tasks}
 
@@ -370,6 +403,45 @@
     SMOTE provided no systematic benefit, with average F1 score decreasing by 0.6\% across our streamlined model suite. This confirms that synthetic oversampling is unnecessary and potentially harmful for already-balanced datasets (1.13:1 ratio). The slight performance degradation likely results from synthetic samples introducing noise that obscures true decision boundaries. This analysis excluded weaker baseline models (KNN, Naive Bayes, Decision Tree) to focus on production-ready classifiers.
 
     \textbf{Lesson learned:} Always verify class distribution before applying balancing techniques. SMOTE is most effective for imbalance ratios $>$3:1.
+
+    \subsubsection{Multi-Class Health Prediction Results}
+
+    Table \ref{tab:3class} presents performance metrics for 3-class health prediction across 2,314 counties.
+
+    \begin{table}[H]
+    \centering
+    \caption{3-Class Health Prediction Performance}
+    \label{tab:3class}
+    \begin{tabular}{lcccc}
+    \toprule
+    \textbf{Model} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{F1 (Macro)} \\
+    \midrule
+    Random Forest  & \textbf{0.786} & \textbf{0.789} & \textbf{0.785} & \textbf{0.786} \\
+    SVM (RBF)      & 0.775 & 0.778 & 0.774 & 0.775 \\
+    \bottomrule
+    \end{tabular}
+    \end{table}
+
+    Random Forest achieved 78.6\% accuracy, outperforming SVM (77.5\%) by 1.1 percentage points. Both models demonstrated balanced performance across all three health categories, with macro-averaged F1 scores closely matching accuracy metrics, indicating minimal class-specific bias.
+
+    \textbf{Per-class performance (Random Forest):}
+    \begin{itemize}
+        \item \textbf{Good Health:} Precision = 0.82, Recall = 0.79, F1 = 0.80
+        \item \textbf{Fair Health:} Precision = 0.75, Recall = 0.77, F1 = 0.76
+        \item \textbf{Poor Health:} Precision = 0.80, Recall = 0.80, F1 = 0.80
+    \end{itemize}
+
+    The Fair Health category showed slightly lower precision (0.75), reflecting its intermediate position between extremes and potential overlap with adjacent categories. Good and Poor Health categories achieved stronger discrimination (F1 = 0.80), validating that extreme health outcomes have more distinct socioeconomic signatures.
+
+    \textbf{Key insights:}
+    \begin{enumerate}
+        \item Using all 49 features rather than feature-selected subset improved performance by capturing complex interactions between socioeconomic factors
+        \item 2,314-county sample (post-preprocessing) provided robust training data despite removing high-missingness columns
+        \item Quantile-based class creation ensured balanced groups (771 counties per class), eliminating need for class weighting
+        \item Random Forest's ensemble approach better handled feature interactions than SVM's kernel method
+    \end{enumerate}
+
+    This multi-class framework enables more nuanced county risk stratification than binary classification, supporting graduated intervention intensity (e.g., preventive outreach for Fair Health counties vs. intensive services for Poor Health counties).
 
     \subsection{Clustering Analysis}
 
@@ -571,14 +643,15 @@
 
     \subsection{Summary}
 
-    This study applied comprehensive machine learning techniques to investigate socioeconomic determinants of metabolic health across 2,275 US counties. Key contributions include:
+    This study applied comprehensive machine learning techniques to investigate socioeconomic determinants of metabolic health across US counties (2,275 for binary tasks, 2,314 for multi-class prediction). Key contributions include:
 
     \begin{enumerate}
         \item Demonstrating that socioeconomic factors (sleep deprivation r=0.51, poverty r=0.42) predict metabolic health more strongly than food environment (r=-0.28)
+        \item Developing novel 3-class health prediction framework achieving 78.6\% accuracy (Random Forest) and 77.5\% accuracy (SVM) for graduated risk stratification across Good/Fair/Poor health categories
         \item Showing that SMOTE provides no benefit for balanced datasets (1.13:1 ratio), with slight performance degradation
         \item Identifying five distinct county clusters ranging from healthy affluent to highest-risk, enabling targeted interventions
-        \item Achieving strong predictive performance: 41.7\% $R^2$ for obesity regression, 84.8\% F1 for income inequality classification
-        \item Developing an interactive Streamlit dashboard for stakeholder exploration of findings
+        \item Achieving strong predictive performance: 41.7\% $R^2$ for obesity regression, 84.8\% F1 for binary income inequality classification, 78.6\% accuracy for 3-class health prediction
+        \item Developing an interactive Streamlit dashboard with 9 pages including 3-class health prediction module for stakeholder exploration of findings
     \end{enumerate}
 
     These findings support policy interventions targeting poverty, education, and sleep health rather than food access alone, with implications for UN SDGs 3 and 10.
@@ -638,13 +711,13 @@
 
     Following the Contributor Roles Taxonomy (CRediT) \cite{credit}:
 
-    \textbf{Savitha Vijayarangan (Team Lead \& Data Integration Specialist):} Conceptualization (Lead), Data Curation (Lead), Investigation (Lead), Software (Lead), Visualization (Lead), Writing - Original Draft (Lead), Writing - Review \& Editing (Lead), Project Administration (Lead)
+    \textbf{Savitha Vijayarangan (Team Lead \& Data Integration Specialist):} Conceptualization (Lead), Data Curation (Lead), Investigation (Lead), Software (Lead), Visualization (Lead), Writing - Original Draft (Lead), Writing - Review \& Editing (Lead), Project Administration (Lead), Dashboard Development (Lead), Feature Engineering (Lead)
 
-    \textbf{Jane Heng (Statistical Analyst \& Advanced Ensemble Lead):} Methodology (Equal), Formal Analysis (Equal), Software (Supporting), Validation (Supporting), Writing - Review \& Editing (Supporting)
+    \textbf{Jane Heng (Advanced Ensemble Methods \& Model Optimization Lead):} Methodology (Equal), Formal Analysis (Equal), Model Optimization Pipeline Development (Lead), Hyperparameter Tuning (Lead), Random Forest \& Extra Trees Implementation (Lead), Validation (Supporting), Writing - Review \& Editing (Supporting)
 
-    \textbf{Rishi Patel (Clustering \& PCA Specialist):} Formal Analysis (Supporting), Software (Supporting), Visualization (Supporting), Investigation (Supporting)
+    \textbf{Rishi Patel (3-Class Classification \& Multi-Class Analysis Specialist):} Multi-Class Health Prediction (Lead), 3-Class SVM/RF Implementation (Lead), Formal Analysis (Supporting), Software (Supporting), Validation (Supporting), Investigation (Supporting), Writing - Review \& Editing (Supporting)
 
-    \textbf{Kapil Kumar (Predictive Modeling \& Visualization Lead):} Software (Supporting), Visualization (Supporting), Formal Analysis (Supporting), Validation (Supporting)
+    \textbf{Kapil Kumar (K-Means Clustering \& Unsupervised Learning Lead):} K-Means Clustering Analysis (Lead), Cluster Profiling (Lead), Elbow Method \& Silhouette Analysis (Lead), Visualization (Supporting), Formal Analysis (Supporting), Writing - Review \& Editing (Supporting)
 
     \section*{Use of Generative AI}
 
