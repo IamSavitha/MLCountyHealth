@@ -1199,148 +1199,190 @@ elif page == "5. Classification Models":
     with tab7:
         st.markdown("### 3-Class Health Classification")
         st.markdown("""
-        This section predicts **overall county health status** (Good/Fair/Poor Health) based on `% Fair or Poor Health`.
-        Unlike the income inequality binary classification above, this is a **multi-class** problem with 3 health categories.
+        This section predicts **overall county health status** (Good/Fair/Poor Health) based on `% Fair or Poor Health` from the raw 2025 County Health Rankings data.
+        Unlike the income inequality binary classification above, this is a **multi-class** problem with 3 health categories using quantile-based classification.
         """)
 
-        # Create Health_Class target based on % Fair or Poor Health quartiles
-        if '% Fair or Poor Health' in df.columns:
-            health_percentile = df['% Fair or Poor Health'].dropna()
-            q33, q67 = health_percentile.quantile([0.33, 0.67])
+        # Load raw data from Excel and process it like the notebook
+        try:
+            raw_df = pd.read_excel('../data/raw/2025CountyHealthRankingsDatav3.xlsx',
+                                   sheet_name='Select Measure Data',
+                                   header=1)
 
-            # Create 3-class target
-            df_health = df.dropna(subset=['% Fair or Poor Health'] + FEATURE_COLS).copy()
-            df_health['Health_Class'] = pd.cut(
-                df_health['% Fair or Poor Health'],
-                bins=[-np.inf, q33, q67, np.inf],
-                labels=['Good Health', 'Fair Health', 'Poor Health']
-            )
+            # Check if % Fair or Poor Health exists
+            if '% Fair or Poor Health' in raw_df.columns:
+                # Preprocess exactly like notebook
+                # Remove columns with >700 nulls
+                null_count = raw_df.isnull().sum()
+                null_cols_gt_700 = list(null_count[null_count > 700].index)
+                new_df = raw_df.drop(axis=1, columns=null_cols_gt_700)
 
-            st.markdown(f"""
-            <div class="insight-box">
-            <strong>Health Classification Thresholds:</strong><br>
-            • Good Health: &lt; {q33:.1f}% Fair/Poor Health<br>
-            • Fair Health: {q33:.1f}% - {q67:.1f}%<br>
-            • Poor Health: &gt; {q67:.1f}%
-            </div>
-            """, unsafe_allow_html=True)
+                # Drop FIPS, State, County
+                new_df = new_df.drop(columns=['FIPS', 'State', 'County'], errors='ignore')
 
-            # Prepare data
-            X_health = df_health[FEATURE_COLS]
-            y_health = df_health['Health_Class']
+                # Drop CI and Z-score columns
+                cols_to_drop = [x for x in new_df.columns if '95% CI' in x or 'National Z-Score' in x]
+                new_df = new_df.drop(columns=cols_to_drop)
 
-            # Train-test split
-            X_train_h, X_test_h, y_train_h, y_test_h = train_test_split(
-                X_health, y_health, test_size=0.2, random_state=42, stratify=y_health
-            )
+                # Drop water violation
+                new_df = new_df.drop(columns=['Presence of Water Violation'], errors='ignore')
 
-            # Scale features
-            scaler_h = StandardScaler()
-            X_train_h_scaled = scaler_h.fit_transform(X_train_h)
-            X_test_h_scaled = scaler_h.transform(X_test_h)
+                # Drop all rows with any missing values (like notebook: final_df = new_df.dropna())
+                final_df = new_df.dropna()
 
-            # Train Random Forest and SVM
-            rf_health = RandomForestClassifier(n_estimators=200, max_depth=20, random_state=42)
-            svm_health = SVC(kernel='rbf', C=10, gamma='scale', random_state=42, probability=True)
+                # Create 3-class target using quantiles (same as notebook)
+                final_df = final_df.copy()
+                final_df['Health_Class'] = pd.qcut(
+                    final_df['% Fair or Poor Health'],
+                    q=3,
+                    labels=['Good Health', 'Fair Health', 'Poor Health']
+                )
 
-            rf_health.fit(X_train_h_scaled, y_train_h)
-            svm_health.fit(X_train_h_scaled, y_train_h)
+                # Get quantile thresholds for display
+                health_vals = final_df['% Fair or Poor Health']
+                q33, q67 = health_vals.quantile([0.33, 0.67])
 
-            # Predictions
-            rf_pred_h = rf_health.predict(X_test_h_scaled)
-            svm_pred_h = svm_health.predict(X_test_h_scaled)
+                st.markdown(f"""
+                <div class="insight-box">
+                <strong>Health Classification Thresholds (% Fair or Poor Health):</strong><br>
+                • Good Health: &lt; {q33:.1f}% (bottom third)<br>
+                • Fair Health: {q33:.1f}% - {q67:.1f}% (middle third)<br>
+                • Poor Health: &gt; {q67:.1f}% (top third)<br>
+                • Total counties: {len(final_df):,}<br>
+                • Class distribution: {len(final_df[final_df['Health_Class']=='Good Health'])} / {len(final_df[final_df['Health_Class']=='Fair Health'])} / {len(final_df[final_df['Health_Class']=='Poor Health'])} (Good/Fair/Poor)
+                </div>
+                """, unsafe_allow_html=True)
 
-            # Metrics
-            rf_acc_h = accuracy_score(y_test_h, rf_pred_h)
-            svm_acc_h = accuracy_score(y_test_h, svm_pred_h)
+                # Use ALL numeric features (except target) like the notebook
+                numeric_features = final_df.select_dtypes(include=['float64', 'int64']).columns.tolist()
 
-            # Display results
-            col1, col2 = st.columns(2)
+                # Remove target from features
+                if '% Fair or Poor Health' in numeric_features:
+                    numeric_features.remove('% Fair or Poor Health')
 
-            with col1:
-                st.markdown("#### Random Forest")
-                st.metric("Accuracy", f"{rf_acc_h:.1%}")
+                st.info(f"Using {len(numeric_features)} features (all numeric columns from raw data, excluding target)")
 
-                # Confusion Matrix
-                cm_rf = confusion_matrix(y_test_h, rf_pred_h, labels=['Good Health', 'Fair Health', 'Poor Health'])
-                fig_rf = px.imshow(cm_rf,
-                                   labels=dict(x="Predicted", y="Actual"),
-                                   x=['Good', 'Fair', 'Poor'],
-                                   y=['Good', 'Fair', 'Poor'],
-                                   text_auto=True,
-                                   color_continuous_scale='Blues',
-                                   title='RF Confusion Matrix')
-                fig_rf.update_layout(height=350)
-                st.plotly_chart(fig_rf, use_container_width=True)
+                # Prepare features and target
+                X_health = final_df[numeric_features]
+                y_health = final_df['Health_Class']
 
-                st.markdown("**Classification Report:**")
-                st.text(classification_report(y_test_h, rf_pred_h))
+                # Train-test split
+                X_train_h, X_test_h, y_train_h, y_test_h = train_test_split(
+                    X_health, y_health, test_size=0.2, random_state=42, stratify=y_health
+                )
 
-            with col2:
-                st.markdown("#### SVM (RBF Kernel)")
-                st.metric("Accuracy", f"{svm_acc_h:.1%}")
+                # Scale features
+                scaler_h = StandardScaler()
+                X_train_h_scaled = scaler_h.fit_transform(X_train_h)
+                X_test_h_scaled = scaler_h.transform(X_test_h)
 
-                # Confusion Matrix
-                cm_svm = confusion_matrix(y_test_h, svm_pred_h, labels=['Good Health', 'Fair Health', 'Poor Health'])
-                fig_svm = px.imshow(cm_svm,
-                                    labels=dict(x="Predicted", y="Actual"),
-                                    x=['Good', 'Fair', 'Poor'],
-                                    y=['Good', 'Fair', 'Poor'],
-                                    text_auto=True,
-                                    color_continuous_scale='Oranges',
-                                    title='SVM Confusion Matrix')
-                fig_svm.update_layout(height=350)
-                st.plotly_chart(fig_svm, use_container_width=True)
+                # Train Random Forest and SVM (same params as notebook)
+                rf_health = RandomForestClassifier(n_estimators=200, max_depth=20, random_state=42)
+                svm_health = SVC(kernel='rbf', C=10, gamma='scale', random_state=42, probability=True)
 
-                st.markdown("**Classification Report:**")
-                st.text(classification_report(y_test_h, svm_pred_h))
+                rf_health.fit(X_train_h_scaled, y_train_h)
+                svm_health.fit(X_train_h_scaled, y_train_h)
 
-            # Model comparison
-            st.markdown("---")
-            st.markdown("### Model Comparison")
+                # Predictions
+                rf_pred_h = rf_health.predict(X_test_h_scaled)
+                svm_pred_h = svm_health.predict(X_test_h_scaled)
 
-            comparison_3class = pd.DataFrame({
-                'Model': ['Random Forest', 'SVM (RBF)'],
-                'Accuracy': [rf_acc_h, svm_acc_h],
-                'Classes': [3, 3],
-                'Purpose': ['Multi-class health status prediction', 'Multi-class health status prediction']
-            })
+                # Metrics
+                rf_acc_h = accuracy_score(y_test_h, rf_pred_h)
+                svm_acc_h = accuracy_score(y_test_h, svm_pred_h)
 
-            fig_comp = px.bar(comparison_3class, x='Model', y='Accuracy',
-                             title='3-Class Health Prediction Accuracy',
-                             color='Model',
-                             color_discrete_sequence=['#4CAF50', '#FF5722'])
-            fig_comp.update_layout(height=300, showlegend=False)
-            st.plotly_chart(fig_comp, use_container_width=True)
+                # Display results
+                col1, col2 = st.columns(2)
 
-            st.markdown(f"""
-            <div class="insight-box">
-            <strong>Key Findings:</strong><br>
-            • Random Forest achieves <strong>{rf_acc_h:.1%}</strong> accuracy in predicting health status<br>
-            • SVM achieves <strong>{svm_acc_h:.1%}</strong> accuracy<br>
-            • Both models can effectively differentiate between Good, Fair, and Poor health counties<br>
-            • This multi-class prediction helps identify counties needing targeted interventions
-            </div>
-            """, unsafe_allow_html=True)
+                with col1:
+                    st.markdown("#### Random Forest")
+                    st.metric("Accuracy", f"{rf_acc_h:.1%}")
 
-            # Feature importance (RF only)
-            st.markdown("### Top Features for Health Classification")
+                    # Confusion Matrix
+                    cm_rf = confusion_matrix(y_test_h, rf_pred_h, labels=['Good Health', 'Fair Health', 'Poor Health'])
+                    fig_rf = px.imshow(cm_rf,
+                                       labels=dict(x="Predicted", y="Actual"),
+                                       x=['Good', 'Fair', 'Poor'],
+                                       y=['Good', 'Fair', 'Poor'],
+                                       text_auto=True,
+                                       color_continuous_scale='Blues',
+                                       title='RF Confusion Matrix')
+                    fig_rf.update_layout(height=350)
+                    st.plotly_chart(fig_rf, use_container_width=True)
 
-            importance_h = rf_health.feature_importances_
-            feat_imp_h = pd.DataFrame({
-                'Feature': FEATURE_COLS,
-                'Importance': importance_h
-            }).sort_values('Importance', ascending=False).head(10)
+                    st.markdown("**Classification Report:**")
+                    st.text(classification_report(y_test_h, rf_pred_h))
 
-            fig_imp = px.bar(feat_imp_h, x='Importance', y='Feature', orientation='h',
-                            title='Top 10 Features (Random Forest)',
-                            color='Importance',
-                            color_continuous_scale='Viridis')
-            fig_imp.update_layout(height=400)
-            st.plotly_chart(fig_imp, use_container_width=True)
+                with col2:
+                    st.markdown("#### SVM (RBF Kernel)")
+                    st.metric("Accuracy", f"{svm_acc_h:.1%}")
 
-        else:
-            st.warning("'% Fair or Poor Health' column not found in dataset. Cannot perform 3-class health classification.")
+                    # Confusion Matrix
+                    cm_svm = confusion_matrix(y_test_h, svm_pred_h, labels=['Good Health', 'Fair Health', 'Poor Health'])
+                    fig_svm = px.imshow(cm_svm,
+                                        labels=dict(x="Predicted", y="Actual"),
+                                        x=['Good', 'Fair', 'Poor'],
+                                        y=['Good', 'Fair', 'Poor'],
+                                        text_auto=True,
+                                        color_continuous_scale='Oranges',
+                                        title='SVM Confusion Matrix')
+                    fig_svm.update_layout(height=350)
+                    st.plotly_chart(fig_svm, use_container_width=True)
+
+                    st.markdown("**Classification Report:**")
+                    st.text(classification_report(y_test_h, svm_pred_h))
+
+                # Model comparison
+                st.markdown("---")
+                st.markdown("### Model Comparison")
+
+                comparison_3class = pd.DataFrame({
+                    'Model': ['Random Forest', 'SVM (RBF)'],
+                    'Accuracy': [rf_acc_h, svm_acc_h],
+                    'Classes': [3, 3],
+                    'Purpose': ['Multi-class health status prediction', 'Multi-class health status prediction']
+                })
+
+                fig_comp = px.bar(comparison_3class, x='Model', y='Accuracy',
+                                 title='3-Class Health Prediction Accuracy',
+                                 color='Model',
+                                 color_discrete_sequence=['#4CAF50', '#FF5722'])
+                fig_comp.update_layout(height=300, showlegend=False)
+                st.plotly_chart(fig_comp, use_container_width=True)
+
+                st.markdown(f"""
+                <div class="insight-box">
+                <strong>Key Findings:</strong><br>
+                • Random Forest achieves <strong>{rf_acc_h:.1%}</strong> accuracy in predicting health status<br>
+                • SVM achieves <strong>{svm_acc_h:.1%}</strong> accuracy<br>
+                • Both models can effectively differentiate between Good, Fair, and Poor health counties<br>
+                • This multi-class prediction helps identify counties needing targeted interventions<br>
+                • Expected accuracy: ~78-79% based on notebook results
+                </div>
+                """, unsafe_allow_html=True)
+
+                # Feature importance (RF only)
+                st.markdown("### Top Features for Health Classification")
+
+                importance_h = rf_health.feature_importances_
+                feat_imp_h = pd.DataFrame({
+                    'Feature': numeric_features,
+                    'Importance': importance_h
+                }).sort_values('Importance', ascending=False).head(10)
+
+                fig_imp = px.bar(feat_imp_h, x='Importance', y='Feature', orientation='h',
+                                title='Top 10 Features (Random Forest)',
+                                color='Importance',
+                                color_continuous_scale='Viridis')
+                fig_imp.update_layout(height=400)
+                st.plotly_chart(fig_imp, use_container_width=True)
+
+            else:
+                st.warning("'% Fair or Poor Health' column not found in raw Excel data.")
+
+        except Exception as e:
+            st.error(f"Error loading raw data: {str(e)}")
+            st.info("Make sure the file '../data/raw/2025CountyHealthRankingsDatav3.xlsx' exists with sheet 'Select Measure Data'.")
 
 # =============================================================================
 # PAGE 5B: Advanced Ensemble Methods (Jane Heng's Optimization Pipeline)
