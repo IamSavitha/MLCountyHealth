@@ -51,6 +51,10 @@ from scipy.cluster.hierarchy import dendrogram, linkage
 from imblearn.over_sampling import SMOTE
 
 import warnings
+from pathlib import Path
+
+# Data lives at <repo>/data; resolve it from this file so the app runs from any working directory.
+DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 warnings.filterwarnings('ignore')
 
 # Page config
@@ -101,7 +105,7 @@ st.markdown("""
 # Load data
 @st.cache_data
 def load_data():
-    df = pd.read_csv('../data/processed/cleaned_health_data.csv')
+    df = pd.read_csv(DATA_DIR / 'processed' / 'cleaned_health_data.csv')
     return df
 
 df = load_data()
@@ -1205,7 +1209,7 @@ elif page == "5. Classification Models":
 
         # Load raw data from Excel and process it like the notebook
         try:
-            raw_df = pd.read_excel('../data/raw/2025CountyHealthRankingsDatav3.xlsx',
+            raw_df = pd.read_excel(DATA_DIR / 'raw' / '2025CountyHealthRankingsDatav3.xlsx',
                                    sheet_name='Select Measure Data',
                                    header=1)
 
@@ -1382,7 +1386,7 @@ elif page == "5. Classification Models":
 
         except Exception as e:
             st.error(f"Error loading raw data: {str(e)}")
-            st.info("Make sure the file '../data/raw/2025CountyHealthRankingsDatav3.xlsx' exists with sheet 'Select Measure Data'.")
+            st.info("Make sure the file 'data/raw/2025CountyHealthRankingsDatav3.xlsx' exists with sheet 'Select Measure Data'.")
 
 # =============================================================================
 # PAGE 5B: Advanced Ensemble Methods (Jane Heng's Optimization Pipeline)

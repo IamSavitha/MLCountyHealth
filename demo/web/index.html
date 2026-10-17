@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>Food Deserts &amp; County Health · Live Dashboard</title>
+<meta name="description" content="Interactive ML dashboard on food access and obesity/diabetes across 2,275 US counties, running in the browser with stlite.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/browser@1.9.2/build/stlite.css">
+<style>
+  :root { --bg:#ffffff; --ink:#1f2933; --muted:#616e7c; --bar:#f5f7fa; --line:#e4e7eb; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0e1117; --ink:#e4e7eb; --muted:#9aa5b1; --bar:#161a23; --line:#262b36; } }
+  html, body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  .bar { background:var(--bar); border-bottom:1px solid var(--line); padding:10px 16px; font-size:.9rem; color:var(--muted); }
+  .bar b { color:var(--ink); } .bar a { color:inherit; }
+  #loading { padding:48px 16px; text-align:center; color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="bar"><b>Live dashboard</b>: Python and scikit-learn running in your browser through
+  <a href="https://github.com/whitphx/stlite">stlite</a>. The first load downloads the Python runtime (about 30–60 s).
+  · <a href="https://github.com/IamSavitha/MLCountyHealth">Source code</a></div>
+<div id="root"><div id="loading">Starting Python in your browser…</div></div>
+<script type="module">
+import { mount } from "https://cdn.jsdelivr.net/npm/@stlite/browser@1.9.2/build/stlite.js";
+mount(
+  {
+    requirements: ["scikit-learn", "scipy", "matplotlib", "seaborn", "plotly", "openpyxl", "imbalanced-learn"],
+    entrypoint: "dashboards/main_dashboard.py",
+    files: {
+      "dashboards/main_dashboard.py": { url: "./app/dashboards/main_dashboard.py" },
+      "data/processed/cleaned_health_data.csv": { url: "./app/data/processed/cleaned_health_data.csv" },
+      "data/raw/2025CountyHealthRankingsDatav3.xlsx": { url: "./app/data/raw/2025CountyHealthRankingsDatav3.xlsx" },
+    },
+    streamlitConfig: { "client.toolbarMode": "viewer" },
+  },
+  document.getElementById("root"),
+);
+</script>
+</body>
+</html>

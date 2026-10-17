@@ -1,0 +1,42 @@
+name: Deploy browser dashboard
+
+on:
+  push:
+    branches: [main]
+    paths: ["dashboards/main_dashboard.py", "data/**", "demo/web/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble site (stlite loads the Streamlit app and data from ./app)
+        run: |
+          mkdir -p site/app/dashboards site/app/data/processed site/app/data/raw
+          cp demo/web/index.html site/
+          cp dashboards/main_dashboard.py site/app/dashboards/
+          cp data/processed/cleaned_health_data.csv site/app/data/processed/
+          cp data/raw/2025CountyHealthRankingsDatav3.xlsx site/app/data/raw/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
