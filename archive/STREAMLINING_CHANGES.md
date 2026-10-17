@@ -8,7 +8,7 @@
 ## Archived Files
 
 - **Full version dashboard:** `archive/main_dashboard_full_version.py` (92KB)
-- **Full version report:** `archive/term_project_report_full_version.tex` (55KB)
+- **Full version report:** `archive/project_report_full_version.tex` (55KB)
 
 ---
 
@@ -117,7 +117,7 @@ from sklearn.linear_model import Lasso  # Removed
 6. **Model Comparison** (lines 2058-2108): Updated for streamlined suite
 7. **Conclusions** (lines 2153-2165): Updated best model summaries
 
-### term_project_report.tex
+### project_report.tex
 **Tables updated:**
 
 1. **Table II (Regression - Obesity):**
@@ -189,8 +189,8 @@ from sklearn.linear_model import Lasso  # Removed
 - Archive is at `/archive/main_dashboard_full_version.py`
 
 ### LaTeX Report
-- Compile the updated `/docs/term_project_report.tex`
-- Archive is at `/archive/term_project_report_full_version.tex`
+- Compile the updated `/docs/project_report.tex`
+- Archive is at `/archive/project_report_full_version.tex`
 - Tables now show focused, production-ready algorithm suite
 
 ### Presentation
@@ -208,9 +208,9 @@ from sklearn.linear_model import Lasso  # Removed
 ## Files Modified
 
 1. `/dashboards/main_dashboard.py` - Streamlined from 13 to 9 algorithms
-2. `/docs/term_project_report.tex` - Updated tables and methodology
+2. `/docs/project_report.tex` - Updated tables and methodology
 3. `/archive/main_dashboard_full_version.py` - Backup of original
-4. `/archive/term_project_report_full_version.tex` - Backup of original
+4. `/archive/project_report_full_version.tex` - Backup of original
 5. `/archive/STREAMLINING_CHANGES.md` - This summary document
 
 ---
@@ -219,7 +219,7 @@ from sklearn.linear_model import Lasso  # Removed
 
 The streamlined version maintains 100% of the best performance metrics while reducing complexity by 31%. This demonstrates analytical maturity: the ability to critically evaluate models and select the right tools for the job rather than applying every available algorithm indiscriminately.
 
-**Academic Impact:** Reviewers and professors appreciate focused, justified algorithm selection. This approach shows:
+**Academic Impact:** Reviewers appreciate focused, justified algorithm selection. This approach shows:
 - Critical thinking about model selection criteria
 - Understanding of algorithm strengths/weaknesses
 - Ability to balance complexity with performance

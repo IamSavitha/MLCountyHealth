@@ -1,6 +1,6 @@
 # Food Desert Effect on County-Level Health Outcomes
 
-DATA-245 Machine Learning Group Project
+Team machine-learning study of how food access shapes community health.
 
 ## Overview
 
@@ -9,7 +9,7 @@ This project investigates how food access inequality correlates with community-l
 ## Project Structure
 
 ```
-ML group project/
+MLCountyHealth/
 ├── data/
 │   ├── raw/                    # Original source data
 │   ├── processed/              # Cleaned datasets
@@ -92,7 +92,6 @@ Key notebooks:
 
 ## Team
 
-DATA-245 Group 3:
 - Savitha Vijayarangan - Project Coordination
 - Jane Heng - Regression Lead
 - Rishi Visweswar Boppana - PCA Lead
